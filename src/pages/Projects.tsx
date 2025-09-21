@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -84,6 +85,7 @@ function getStatusBadgeVariant(status: string) {
 
 export default function Projects() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleProjectAdded = (projectData: any) => {
     // Here you would typically add the project to your state/database
@@ -119,7 +121,11 @@ export default function Projects() {
         {/* Projects Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {projects.map((project) => (
-            <Card key={project.id} className="bg-card border-border shadow-card hover:shadow-elegant transition-all duration-300 hover:scale-[1.02]">
+            <Card 
+              key={project.id} 
+              className="bg-card border-border shadow-card hover:shadow-elegant transition-all duration-300 hover:scale-[1.02] cursor-pointer"
+              onClick={() => navigate(`/projects/${project.id}`)}
+            >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center space-x-3">
