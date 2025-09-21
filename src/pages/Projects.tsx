@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AddProjectDialog } from "@/components/projects/AddProjectDialog";
 import { 
   Play, 
   Square, 
@@ -81,6 +83,13 @@ function getStatusBadgeVariant(status: string) {
 }
 
 export default function Projects() {
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+
+  const handleProjectAdded = (projectData: any) => {
+    // Here you would typically add the project to your state/database
+    console.log("New project:", projectData);
+  };
+
   return (
     <Layout 
       title="Projects" 
@@ -90,7 +99,10 @@ export default function Projects() {
         {/* Header Actions */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
-            <Button className="bg-primary hover:bg-primary/90">
+            <Button 
+              className="bg-primary hover:bg-primary/90"
+              onClick={() => setIsAddDialogOpen(true)}
+            >
               <Plus className="mr-2 h-4 w-4" />
               New Project
             </Button>
@@ -179,7 +191,10 @@ export default function Projects() {
           ))}
 
           {/* Add New Project Card */}
-          <Card className="bg-card/50 border-dashed border-2 border-muted-foreground/25 hover:border-primary/50 transition-colors cursor-pointer group">
+          <Card 
+            className="bg-card/50 border-dashed border-2 border-muted-foreground/25 hover:border-primary/50 transition-colors cursor-pointer group"
+            onClick={() => setIsAddDialogOpen(true)}
+          >
             <CardContent className="flex items-center justify-center h-full min-h-[300px]">
               <div className="text-center">
                 <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
@@ -194,6 +209,12 @@ export default function Projects() {
           </Card>
         </div>
       </div>
+
+      <AddProjectDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        onProjectAdded={handleProjectAdded}
+      />
     </Layout>
   );
 }
