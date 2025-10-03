@@ -1,12 +1,22 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "nova",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "version": "1.0.0",
+  "description": "Nova - Node Versatility Desktop App",
+  "author": "Nova Team",
+  "main": "dist-electron/main.js",
+  "homepage": "./",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "dev:nova": "node scripts/dev.js",
+    "build": "tsc -p electron && vite build && electron-builder",
     "build:dev": "vite build --mode development",
+    "build:electron": "tsc -p electron && vite build",
+    "electron": "wait-on tcp:5173 && cross-env IS_DEV=true electron .",
+    "electron:pack": "electron-builder",
+    "electron:dev": "concurrently \"npm run dev\" \"npm run electron\"",
+    "electron:preview": "npm run build:electron && electron .",
+    "compile": "tsc -p electron",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -59,7 +69,14 @@
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.9",
-    "zod": "^3.25.76"
+    "zod": "^3.25.76",
+    "better-sqlite3": "^9.2.2",
+    "cross-spawn": "^7.0.3",
+    "fs-extra": "^11.2.0",
+    "get-port": "^7.0.0",
+    "uuid": "^9.0.1",
+    "xterm": "^5.3.0",
+    "xterm-addon-fit": "^0.8.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
@@ -78,6 +95,44 @@
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.38.0",
-    "vite": "^5.4.19"
+    "vite": "^5.4.19",
+    "electron": "^28.2.0",
+    "electron-builder": "^24.9.1",
+    "electron-updater": "^6.1.7",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "wait-on": "^7.2.0",
+    "@types/better-sqlite3": "^7.6.8",
+    "@types/cross-spawn": "^6.0.6",
+    "@types/fs-extra": "^11.0.4",
+    "@types/uuid": "^9.0.7"
+  },
+  "build": {
+    "appId": "com.nova.desktop",
+    "productName": "Nova",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "templates/**/*",
+      "resources/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/",
+        "to": "resources/"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
   }
 }
