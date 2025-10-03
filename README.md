@@ -1,73 +1,137 @@
-# Welcome to your Lovable project
+# Nova - Node Versatility Desktop App
 
-## Project info
+Nova is a powerful Electron-based desktop application for creating, managing, and running Node.js projects. It provides a beautiful GUI for scaffolding Express, Next.js, Nuxt.js, and other Node.js applications with built-in project management capabilities.
 
-**URL**: https://lovable.dev/projects/4b7383e1-f017-444c-b9e4-6500b466325c
+## Features
 
-## How can I edit this code?
+- 🚀 **Project Scaffolding**: Create new projects from built-in templates (Express, Next.js, Nuxt.js)
+- 🎮 **Project Management**: Start, stop, restart, and monitor your Node.js applications
+- 📊 **Real-time Monitoring**: Live logs and status updates for running projects
+- 🔧 **Port Management**: Automatic port detection and management
+- 📁 **File System Integration**: Browse and open project directories
+- 🎨 **Modern UI**: Beautiful interface built with React, Tailwind CSS, and shadcn/ui
+- 💾 **Local Database**: SQLite-based project metadata storage
+- 🔒 **Secure**: Safe IPC communication between renderer and main processes
 
-There are several ways of editing your application.
+## Tech Stack
 
-**Use Lovable**
+- **Electron**: Desktop application framework
+- **React**: Frontend UI library
+- **TypeScript**: Type-safe development
+- **Tailwind CSS**: Utility-first CSS framework
+- **shadcn/ui**: Modern UI components
+- **SQLite**: Local database for project metadata
+- **Vite**: Fast development and build tool
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/4b7383e1-f017-444c-b9e4-6500b466325c) and start prompting.
+## Development
 
-Changes made via Lovable will be committed automatically to this repo.
+### Prerequisites
 
-**Use your preferred IDE**
+- Node.js 18+ 
+- npm or yarn
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Setup
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd nova
+   ```
 
-Follow these steps:
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+3. Start development mode:
+   ```bash
+   npm run dev:nova
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+This will:
+- Start the Vite dev server for the React frontend
+- Compile TypeScript files for Electron
+- Launch the Electron application in development mode
 
-# Step 3: Install the necessary dependencies.
-npm i
+### Available Scripts
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+- `npm run dev:nova` - Start Nova in development mode
+- `npm run dev` - Start only the Vite dev server
+- `npm run compile` - Compile Electron TypeScript files
+- `npm run build` - Build the application for production
+- `npm run electron:pack` - Package the application with electron-builder
+
+## Project Structure
+
+```
+nova/
+├── electron/                  # Electron main process
+│   ├── main.ts               # Main Electron process
+│   ├── preload.ts            # Preload script (IPC bridge)
+│   └── ipcHandlers/          # IPC request handlers
+├── backend/                  # Shared backend modules
+│   ├── db.ts                 # SQLite database manager
+│   ├── projectManager.ts    # Project lifecycle management
+│   ├── templateManager.ts   # Template handling
+│   └── utils/                # Utility functions
+├── src/                      # React frontend
+│   ├── components/           # UI components
+│   ├── hooks/                # React hooks
+│   ├── pages/                # Application pages
+│   └── types/                # TypeScript definitions
+├── templates/                # Built-in project templates
+│   ├── express-basic/        # Express.js template
+│   ├── next-basic/           # Next.js template
+│   └── nuxt-basic/           # Nuxt.js template
+└── resources/                # Application resources
 ```
 
-**Edit a file directly in GitHub**
+## Architecture
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Nova follows a secure Electron architecture:
 
-**Use GitHub Codespaces**
+1. **Main Process**: Handles system operations, file system access, and process management
+2. **Renderer Process**: React-based UI running in a sandboxed environment
+3. **Preload Script**: Secure bridge between main and renderer processes using `contextBridge`
+4. **IPC Communication**: Type-safe communication channels for all operations
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Security
 
-## What technologies are used for this project?
+- No `nodeIntegration` in renderer process
+- Context isolation enabled
+- Secure IPC channels with input validation
+- Safe command execution with argument arrays (no shell injection)
+- Path sanitization for file operations
 
-This project is built with:
+## Templates
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Nova includes built-in templates for:
 
-## How can I deploy this project?
+- **Express Basic**: Minimal Express.js server with basic routing
+- **Next.js Basic**: Next.js application with TypeScript and Tailwind CSS
+- **Nuxt.js Basic**: Nuxt.js application with TypeScript and Tailwind CSS
 
-Simply open [Lovable](https://lovable.dev/projects/4b7383e1-f017-444c-b9e4-6500b466325c) and click on Share -> Publish.
+Templates support token replacement for project names, ports, and descriptions.
 
-## Can I connect a custom domain to my Lovable project?
+## Contributing
 
-Yes, you can!
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## License
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+MIT License - see LICENSE file for details.
+
+## Roadmap
+
+- [ ] Custom template support
+- [ ] Package manager integration (yarn, pnpm)
+- [ ] Environment variable management
+- [ ] Log filtering and search
+- [ ] Project import/export
+- [ ] Plugin system
+- [ ] Cloud synchronization
+- [ ] Docker integration

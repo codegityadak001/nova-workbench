@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -29,15 +29,18 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Folder, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 const projectSchema = z.object({
   name: z.string().min(1, "Project name is required").max(50, "Name too long"),
   description: z.string().max(200, "Description too long").optional(),
-  framework: z.string().min(1, "Framework is required"),
+  templateKey: z.string().min(1, "Template is required"),
   port: z.number().min(3000, "Port must be >= 3000").max(9999, "Port must be <= 9999"),
-  path: z.string().min(1, "Project path is required"),
+  baseDir: z.string().min(1, "Project directory is required"),
+  initGit: z.boolean().default(true),
+  installDeps: z.boolean().default(true),
 });
 
 type ProjectFormData = z.infer<typeof projectSchema>;
@@ -45,52 +48,103 @@ type ProjectFormData = z.infer<typeof projectSchema>;
 interface AddProjectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onProjectAdded?: (project: ProjectFormData) => void;
+  onProjectAdded?: () => void;
 }
 
-const frameworks = [
-  { value: "express", label: "Express.js" },
-  { value: "fastify", label: "Fastify" },
-  { value: "koa", label: "Koa.js" },
-  { value: "nestjs", label: "NestJS" },
-  { value: "nextjs", label: "Next.js" },
-];
+interface Template {
+  id: string;
+  key: string;
+  name: string;
+  source: string;
+  meta_json: string;
+}
 
 export function AddProjectDialog({ open, onOpenChange, onProjectAdded }: AddProjectDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [templates, setTemplates] = useState<Template[]>([]);
 
   const form = useForm<ProjectFormData>({
     resolver: zodResolver(projectSchema),
     defaultValues: {
       name: "",
       description: "",
-      framework: "",
+      templateKey: "",
       port: 3000,
-      path: "",
+      baseDir: "",
+      initGit: true,
+      installDeps: true,
     },
   });
+
+  // Load templates when dialog opens
+  useEffect(() => {
+    if (open && window.nova) {
+      loadTemplates();
+    }
+  }, [open]);
+
+  const loadTemplates = async () => {
+    try {
+      const result = await window.nova.templates.list();
+      if (result.success) {
+        setTemplates(result.data);
+      }
+    } catch (error) {
+      console.error('Failed to load templates:', error);
+      toast.error('Failed to load templates');
+    }
+  };
 
   const onSubmit = async (data: ProjectFormData) => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast.success("Project created successfully!");
-      onProjectAdded?.(data);
-      onOpenChange(false);
-      form.reset();
+      if (!window.nova) {
+        throw new Error('Nova API not available');
+      }
+
+      // Determine project type from template
+      const template = templates.find(t => t.key === data.templateKey);
+      const projectType = template?.key || 'custom';
+
+      const result = await window.nova.projects.create({
+        name: data.name,
+        type: projectType,
+        templateKey: data.templateKey,
+        baseDir: data.baseDir,
+        port: data.port,
+        initGit: data.initGit,
+        installDeps: data.installDeps,
+        envVars: {}
+      });
+
+      if (result.success) {
+        toast.success("Project created successfully!");
+        onProjectAdded?.();
+        onOpenChange(false);
+        form.reset();
+      } else {
+        toast.error(result.error || "Failed to create project");
+      }
     } catch (error) {
+      console.error('Failed to create project:', error);
       toast.error("Failed to create project");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleBrowse = () => {
-    // Simulate file browser - in Electron this would open a directory picker
-    const mockPath = `/Users/developer/projects/${form.getValues("name") || "new-project"}`;
-    form.setValue("path", mockPath);
+  const handleBrowse = async () => {
+    try {
+      if (!window.nova) return;
+      
+      const result = await window.nova.system.selectDirectory();
+      if (result.success && result.data) {
+        form.setValue("baseDir", result.data);
+      }
+    } catch (error) {
+      console.error('Failed to select directory:', error);
+      toast.error('Failed to select directory');
+    }
   };
 
   return (
@@ -115,14 +169,6 @@ export function AddProjectDialog({ open, onOpenChange, onProjectAdded }: AddProj
                     <Input 
                       placeholder="my-awesome-api" 
                       {...field}
-                      onChange={(e) => {
-                        field.onChange(e);
-                        // Auto-generate path when name changes
-                        const name = e.target.value;
-                        if (name && !form.getValues("path")) {
-                          form.setValue("path", `/Users/developer/projects/${name}`);
-                        }
-                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -151,20 +197,20 @@ export function AddProjectDialog({ open, onOpenChange, onProjectAdded }: AddProj
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="framework"
+                name="templateKey"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Framework</FormLabel>
+                    <FormLabel>Template</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select framework" />
+                          <SelectValue placeholder="Select template" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {frameworks.map((framework) => (
-                          <SelectItem key={framework.value} value={framework.value}>
-                            {framework.label}
+                        {templates.map((template) => (
+                          <SelectItem key={template.key} value={template.key}>
+                            {template.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -196,13 +242,13 @@ export function AddProjectDialog({ open, onOpenChange, onProjectAdded }: AddProj
 
             <FormField
               control={form.control}
-              name="path"
+              name="baseDir"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Project Path</FormLabel>
+                  <FormLabel>Project Directory</FormLabel>
                   <div className="flex space-x-2">
                     <FormControl>
-                      <Input placeholder="/path/to/project" {...field} />
+                      <Input placeholder="/path/to/projects" {...field} />
                     </FormControl>
                     <Button type="button" variant="outline" onClick={handleBrowse}>
                       <Folder className="h-4 w-4" />
@@ -215,6 +261,50 @@ export function AddProjectDialog({ open, onOpenChange, onProjectAdded }: AddProj
                 </FormItem>
               )}
             />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="initGit"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>Initialize Git</FormLabel>
+                      <FormDescription className="text-xs">
+                        Create a git repository
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="installDeps"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>Install Dependencies</FormLabel>
+                      <FormDescription className="text-xs">
+                        Run npm install automatically
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <DialogFooter>
               <Button 
